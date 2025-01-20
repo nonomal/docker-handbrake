@@ -344,6 +344,48 @@ app:
           On systems running unRAID, the `--ulimit core=-1` parameter can be added to the
           `Extra Parameters` field of the container settings.
   changelog:
+    - version: 24.12.1
+      date: 2024-12-07
+      changes:
+        - 'Updated HandBrake to version 1.9.0.'
+        - 'Updated gmmlib to version 22.5.4.'
+        - 'Updated Intel Media Driver to version 24.3.4.'
+        - 'Updated Intel OneVPL GPU runtime to version 24.3.4.'
+        - 'Updated baseimage to version 4.6.7, which brings the following changes:'
+        - '2:Fixed web authentication feature with URL path-based reverse proxy.'
+        - '2:Fixed web audio feature with URL path-based reverse proxy.'
+        - '2:Fixed TLS secure connection method for VNC that was preventing web access.'
+        - '2:Fixed CJK font installation.'
+        - '2:Rebuild against latest distro images to get security fixes.'
+    - version: 24.09.1
+      date: 2024-09-14
+      changes:
+        - 'Updated HandBrake to version 1.8.2.'
+        - 'Updated libva to version 2.22.0.'
+        - 'Updated gmmlib to version 22.5.0.'
+        - 'Updated Intel Media Driver to version 24.2.5.'
+        - 'Updated Intel OneVPL GPU Runtime to version 24.2.5.'
+        - 'Added environment variable to control the HandBrake GUI queue startup action.'
+    - version: 24.06.1
+      date: 2024-06-30
+      changes:
+        - 'Updated HandBrake to version 1.8.1.'
+        - 'Updated libva to version 2.21.0.'
+        - 'Updated gmmlib to version 22.4.0.'
+        - 'Updated Intel Media Driver to version 24.1.5.'
+        - 'Updated Intel OneVPL GPU runtime to version 24.1.5.'
+        - 'Updated baseimage to version 4.6.3, which brings the following changes:'
+        - '2:Audio support through web browser.'
+        - '2:Web authentication support.'
+        - '2:Better support of GTK4 applications.'
+        - '2:Updated noVNC to version 1.5.0.'
+        - '2:Updated web UI components (Bootstrap, Font Awesome).'
+        - '2:When connecting, the control bar is now temporarily shown only once.'
+        - '2:During package mirror setup, make sure to keep permissions of copied files.'
+    - version: 24.03.1
+      date: 2024-03-04
+      changes:
+        - 'Updated HandBrake to version 1.7.3.'
     - version: 24.01.2
       date: 2024-01-13
       changes:
@@ -953,6 +995,24 @@ container:
         title: "HandBrake GUI State"
         description: >-
           Setting this to 1 enables the HandBrake GUI, 0 disables it.
+        display: advanced
+        required: false
+        mask: false
+    - name: HANDBRAKE_GUI_QUEUE_STARTUP_ACTION
+      description: >-
+        Action to be taken on the queue of HandBrake (GUI) when it starts. When set to
+        `PROCESS`, HandBrake automatically starts encoding elements present in the queue.
+        When set to `CLEAR`, the content of the queue is cleared. With any other value,
+        no action is taken on the queue.
+      type: public
+      default: NONE
+      unraid_template:
+        title: "HandBrake GUI State"
+        description: >-
+          Action to be taken on the queue of HandBrake (GUI) when it starts. When set to
+          "PROCESS", HandBrake automatically starts encoding elements present in the
+          queue. When set to "CLEAR", the content of the queue is cleared. With any other
+          value, no action is taken on the queue.
         display: advanced
         required: false
         mask: false

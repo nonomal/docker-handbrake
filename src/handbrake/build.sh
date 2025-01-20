@@ -148,8 +148,8 @@ apk --no-cache add \
     curl \
     binutils \
     git \
-    clang15 \
-    llvm15 \
+    clang17 \
+    llvm17 \
     make \
     cmake \
     pkgconf \
@@ -168,7 +168,6 @@ apk --no-cache add \
     bash \
     nasm \
     meson \
-    cargo \
     cargo-c \
     gettext-dev \
     glib-dev \
@@ -205,10 +204,29 @@ xx-apk --no-cache --no-scripts add \
 
 # gtk
 xx-apk --no-cache --no-scripts add \
-    gtk+3.0-dev \
+    gtk4.0-dev \
     dbus-glib-dev \
     libnotify-dev \
     libgudev-dev \
+
+# Install Rust.
+USE_RUST_FROM_ALPINE_REPO=false
+if $USE_RUST_FROM_ALPINE_REPO; then
+    apk --no-cache add \
+        cargo
+else
+    apk --no-cache add \
+        gcc \
+        musl-dev
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+    source /root/.cargo/env
+
+    # NOTE: When not installing Rust from the Alpine repository, we must compile
+    #       with `RUSTFLAGS="-C target-feature=-crt-static"` to avoid crash
+    #       during GTK initialization.
+    #       See https://github.com/qarmin/czkawka/issues/416.
+    export RUSTFLAGS="-C target-feature=-crt-static"
+fi
 
 #
 # Download sources.
@@ -331,6 +349,7 @@ fi
 if [ "$(xx-info arch)" = "amd64" ]; then
     log "Patching Intel Media Driver..."
     patch -d /tmp/intel-media-driver -p1 < "$SCRIPT_DIR"/intel-media-driver-compile-fix.patch
+    patch -d /tmp/gmmlib -p1 < "$SCRIPT_DIR"/gmmlib-compile-fix.patch
     rm -rf /tmp/intel-media-driver/media_driver/*/ult
 
     log "Configuring Intel Media driver..."
@@ -345,6 +364,7 @@ if [ "$(xx-info arch)" = "amd64" ]; then
             -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
             -Wno-dev \
             -DBUILD_TYPE=Release \
             -DINSTALL_DRIVER_SYSCONF=OFF \
@@ -354,7 +374,7 @@ if [ "$(xx-info arch)" = "amd64" ]; then
     )
 
     log "Compiling Intel Media driver..."
-    make -C /tmp/intel-media-driver/build  -j$(nproc)
+    make VERBOSE=0 -C /tmp/intel-media-driver/build -j$(nproc)
 
     log "Installing Intel Media driver..."
     make DESTDIR=/tmp/handbrake-install -C /tmp/intel-media-driver/build install
@@ -369,6 +389,7 @@ if [ "$(xx-info arch)" = "amd64" ]; then
 
     log "Patching Intel Media SDK..."
     patch -d /tmp/MediaSDK -p1 < "$SCRIPT_DIR"/intel-media-sdk-debug-no-assert.patch
+    patch -d /tmp/MediaSDK -p1 < "$SCRIPT_DIR"/intel-media-sdk-compile-fix.patch
 
     log "Configuring Intel Media SDK..."
     (
@@ -428,8 +449,7 @@ log "Patching HandBrake..."
 if xx-info is-cross; then
     patch -d /tmp/handbrake -p1 < "$SCRIPT_DIR"/cross-compile-fix.patch
 fi
-patch -d /tmp/handbrake -p1 < "$SCRIPT_DIR"/enable-svt-av1-avx512.patch
-patch -d /tmp/handbrake -p1 < "$SCRIPT_DIR"/open-file-all.patch
+patch -d /tmp/handbrake -p1 < "$SCRIPT_DIR"/maximized-window.patch
 
 # Create the meson cross compile config file.
 if xx-info is-cross; then
